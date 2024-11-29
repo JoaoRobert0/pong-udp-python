@@ -1,4 +1,4 @@
-import pygame, sys, random
+import pygame, sys, random, socket
 
 def ball_animation():
 	global ball_speed_x, ball_speed_y
@@ -65,7 +65,24 @@ ball_speed_y = 7 * random.choice((1,-1))
 player_speed = 0
 opponent_speed = 7
 
+# Start socket
+address = '127.0.0.1'
+port = 1060
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+sock.bind((address, port))
+print(f"Servidor conectado em {address}:{port}...")
+
 while True:
+	sock.settimeout(0.05)
+
+	try:
+		data, address = sock.recvfrom(1024)
+		print(f'Recebendo mensagem de {address}:\n{data.decode()}')
+	except socket.timeout:
+		print("Tempo limite para recebimento atingido.")
+	except Exception as e:
+		print(f"Erro inesperado: {e}")
+
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			pygame.quit()
@@ -94,4 +111,4 @@ while True:
 	pygame.draw.aaline(screen, light_grey, (screen_width / 2, 0),(screen_width / 2, screen_height))
 
 	pygame.display.flip()
-	clock.tick(120)
+	clock.tick(60)
