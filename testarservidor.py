@@ -3,35 +3,18 @@ import sys
 import random
 import socket
 
-# Configurações do servidor TCP
-TCP_IP = "0.0.0.0"
-TCP_PORT = 1060
-
 # Configuração do servidor UDP
 UDP_IP = "0.0.0.0"
 UDP_PORT = 1060
 
-# Criação do socket UDP para receber dados
+# Configuração de portas dos clientes
+CLIENTE1_UDP_PORT = 1061
+CLIENTE2_UDP_PORT = 1062
+
+# Criação do socket UDP para receber e enviar dados
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 sock.setblocking(False)  # Não bloquear se não houver dados
-
-# Criação do socket TCP para aceitar as conexões dos clientes
-tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-tcp_socket.bind((TCP_IP, TCP_PORT))
-tcp_socket.listen(2)  # Espera por até 2 conexões (clientes)
-print("Aguardando jogadores...")
-
-# Aceita as conexões dos dois jogadores
-client1, addr1 = tcp_socket.accept()
-print(f"Jogador 1 conectado de {addr1}")
-
-client2, addr2 = tcp_socket.accept()
-print(f"Jogador 2 conectado de {addr2}")
-
-# Envia uma mensagem para os dois clientes indicando que o jogo pode começar
-client1.sendall("Ambos os jogadores estão conectados! O jogo vai começar.".encode())
-client2.sendall("Ambos os jogadores estão conectados! O jogo vai começar.".encode())
 
 # Configuração geral do Pygame
 pygame.init()
@@ -72,39 +55,12 @@ game_active = True
 vencedor = None  # Define o vencedor
 mensagem_vencedor = ""  # Mensagem personalizada do vencedor
 
-# Funções do jogo
-def ball_animation():
-    global ball_speed_x, ball_speed_y, player_score, opponent_score, game_active, vencedor
-    ball.x += ball_speed_x
-    ball.y += ball_speed_y
-
-    if ball.top <= 0 or ball.bottom >= screen_height:
-        ball_speed_y *= -1
-
-    if ball.left <= 0:
-        player_score += 1
-        ball_start()
-    if ball.right >= screen_width:
-        opponent_score += 1
-        ball_start()
-
-    if ball.colliderect(player) or ball.colliderect(opponent):
-        ball_speed_x *= -1
-
-    if player_score >= 3:
-        game_active = False
-        vencedor = "Jogador 2"
-        send_vencedor("Jogador 2")
-    elif opponent_score >= 3:
-        game_active = False
-        vencedor = "Jogador 1"
-        send_vencedor("Jogador 1")
-
-def ball_start():
-    global ball_speed_x, ball_speed_y
-    ball.center = (screen_width / 2, screen_height / 2)
-    ball_speed_x *= random.choice((1, -1))
-    ball_speed_y *= random.choice((1, -1))
+# Função para notificar o vencedor
+def notify_winner(vencedor):
+    if vencedor == "Jogador 1":
+        sock.sendto("você venceu".encode(), ("127.0.0.1", CLIENTE1_UDP_PORT))
+    elif vencedor == "Jogador 2":
+        sock.sendto("você venceu".encode(), ("127.0.0.1", CLIENTE2_UDP_PORT))
 
 def handle_udp_message():
     global player_current_house, opponent_current_house
@@ -157,14 +113,39 @@ def input_text():
 
     mensagem_vencedor = user_input
 
-def send_vencedor(vencedor_msg):
-    # Envia a mensagem do vencedor para o cliente
-    if vencedor == "Jogador 1":
-        client1.sendall(f"Você venceu! {vencedor_msg}".encode())
-        client2.sendall(f"O {vencedor_msg} venceu!".encode())
-    else:
-        client2.sendall(f"Você venceu! {vencedor_msg}".encode())
-        client1.sendall(f"O {vencedor_msg} venceu!".encode())
+# Função de animação da bola
+def ball_animation():
+    global ball_speed_x, ball_speed_y, player_score, opponent_score, game_active, vencedor
+    ball.x += ball_speed_x
+    ball.y += ball_speed_y
+
+    if ball.top <= 0 or ball.bottom >= screen_height:
+        ball_speed_y *= -1
+
+    if ball.left <= 0:
+        player_score += 1
+        ball_start()
+    if ball.right >= screen_width:
+        opponent_score += 1
+        ball_start()
+
+    if ball.colliderect(player) or ball.colliderect(opponent):
+        ball_speed_x *= -1
+
+    if player_score >= 3:
+        game_active = False
+        vencedor = "Jogador 1"
+        notify_winner(vencedor)  # Notificar o vencedor
+    elif opponent_score >= 3:
+        game_active = False
+        vencedor = "Jogador 2"
+        notify_winner(vencedor)  # Notificar o vencedor
+
+def ball_start():
+    global ball_speed_x, ball_speed_y
+    ball.center = (screen_width / 2, screen_height / 2)
+    ball_speed_x *= random.choice((1, -1))
+    ball_speed_y *= random.choice((1, -1))
 
 # Loop principal
 while True:
