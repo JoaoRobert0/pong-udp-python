@@ -4,11 +4,11 @@ import random
 import socket
 
 # Configurações do servidor TCP
-TCP_IP = "0.0.0.0"
+TCP_IP = "10.24.13.131"
 TCP_PORT = 1061
 
 # Configuração do servidor UDP
-UDP_IP = "0.0.0.0"
+UDP_IP = "10.24.13.131"
 UDP_PORT = 1060
 
 # Criação do socket UDP para receber dados

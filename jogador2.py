@@ -2,11 +2,11 @@ import pygame
 import socket
 
 # Configuração do cliente TCP
-TCP_IP = "127.0.0.1"  # LocalHost
+TCP_IP = "10.24.13.131"  # LocalHost
 TCP_PORT = 1061  # Porta TCP
 
 # Configuração do cliente UDP
-UDP_IP = "127.0.0.1"  # LocalHost
+UDP_IP = "10.24.13.131"  # LocalHost
 UDP_PORT = 1060  # Porta UDP
 
 # Criação do socket UDP
