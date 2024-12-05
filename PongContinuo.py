@@ -70,7 +70,6 @@ game_font = pygame.font.Font(None, 36)
 # Controle do jogo
 game_active = True
 vencedor = None  # Define o vencedor
-mensagem_vencedor = ""  # Mensagem personalizada do vencedor
 
 # Funções do jogo
 def ball_animation():
@@ -91,11 +90,11 @@ def ball_animation():
     if ball.colliderect(player) or ball.colliderect(opponent):
         ball_speed_x *= -1
 
-    if player_score >= 3:
+    if player_score >= 10:
         game_active = False
         vencedor = "Jogador 2"
         send_vencedor("Jogador 2")
-    elif opponent_score >= 3:
+    elif opponent_score >= 10:
         game_active = False
         vencedor = "Jogador 1"
         send_vencedor("Jogador 1")
@@ -128,37 +127,8 @@ def update_positions():
     opponent.top = opponent_current_house * house_height
     opponent.top = max(0, min(opponent.top, screen_height - opponent.height))
 
-def input_text():
-    global mensagem_vencedor
-    font = pygame.font.Font(None, 36)
-    user_input = ""
-    input_active = True
-
-    while input_active:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:  # Pressionar Enter para confirmar
-                    input_active = False
-                elif event.key == pygame.K_BACKSPACE:  # Apagar último caractere
-                    user_input = user_input[:-1]
-                else:
-                    user_input += event.unicode
-
-        screen.fill(pygame.Color("grey20"))
-        text_surface = font.render("Digite sua mensagem:", True, light_grey)
-        input_surface = font.render(user_input, True, light_grey)
-
-        screen.blit(text_surface, (screen_width / 2 - text_surface.get_width() / 2, screen_height / 4))
-        screen.blit(input_surface, (screen_width / 2 - input_surface.get_width() / 2, screen_height / 2))
-        pygame.display.flip()
-
-    mensagem_vencedor = user_input
-
 def send_vencedor(vencedor_msg):
-    # Envia a mensagem do vencedor para o cliente
+    # Envia a mensagem do vencedor para os clientes
     if vencedor == "Jogador 1":
         client1.sendall(f"Você venceu! {vencedor_msg}".encode())
         client2.sendall(f"O {vencedor_msg} venceu!".encode())
@@ -178,15 +148,9 @@ while True:
         ball_animation()
         update_positions()
     else:
-        if vencedor and not mensagem_vencedor:
-            input_text()
-
         screen.fill(bg_color)
         vencedor_text = game_font.render(f"{vencedor} venceu!", True, light_grey)
-        mensagem_text = game_font.render(mensagem_vencedor, True, light_grey)
-
-        screen.blit(vencedor_text, (screen_width / 2 - vencedor_text.get_width() / 2, screen_height / 4))
-        screen.blit(mensagem_text, (screen_width / 2 - mensagem_text.get_width() / 2, screen_height / 2))
+        screen.blit(vencedor_text, (screen_width / 2 - vencedor_text.get_width() / 2, screen_height / 2))
         pygame.display.flip()
         continue
 
